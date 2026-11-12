@@ -1,0 +1,11 @@
+{
+  "name": "itemized-quote-builder",
+  "version": "1.0.0",
+  "description": "Free itemized quote and invoice builder for small businesses. Plain HTML, CSS and JavaScript.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/calc.test.js",
+    "start": "npx --yes serve ."
+  }
+}

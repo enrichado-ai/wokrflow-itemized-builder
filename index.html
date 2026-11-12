@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Itemized Quote Builder</title>
+  <meta name="description" content="Free itemized quote and invoice builder for small businesses. Add line items, see live totals and export a PDF. Runs entirely in your browser.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header no-print">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🧾</span>
+      <div>
+        <h1>Itemized Quote Builder</h1>
+        <p class="tagline">Build a quote or invoice, then save it as a PDF. Nothing leaves your browser.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost" id="resetBtn">New document</button>
+      <button type="button" class="btn btn-primary" id="printBtn">Download PDF</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ===== Editor ===== -->
+    <form class="editor no-print" id="editor" autocomplete="off" novalidate>
+      <section class="card">
+        <h2>Document</h2>
+        <div class="segmented" role="radiogroup" aria-label="Document type">
+          <label><input type="radio" name="docType" value="quote" checked> Quote</label>
+          <label><input type="radio" name="docType" value="invoice"> Invoice</label>
+        </div>
+        <div class="grid-2">
+          <label class="field">Number
+            <input type="text" data-field="number">
+          </label>
+          <label class="field">Currency
+            <select data-field="currency">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="CAD">CAD ($)</option>
+              <option value="AUD">AUD ($)</option>
+              <option value="MXN">MXN ($)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="JPY">JPY (¥)</option>
+            </select>
+          </label>
+          <label class="field">Issue date
+            <input type="date" data-field="issueDate">
+          </label>
+          <label class="field"><span id="dueLabel">Valid until</span>
+            <input type="date" data-field="dueDate">
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>From (your business)</h2>
+        <div class="logo-row">
+          <div class="logo-preview" id="logoPreview" aria-hidden="true">Logo</div>
+          <div class="logo-actions">
+            <label class="btn btn-ghost btn-small">
+              Upload logo
+              <input type="file" accept="image/*" id="logoInput" hidden>
+            </label>
+            <button type="button" class="btn btn-ghost btn-small" id="logoRemove" hidden>Remove</button>
+          </div>
+        </div>
+        <label class="field">Business name
+          <input type="text" data-field="from.name" placeholder="Acme Services LLC">
+        </label>
+        <div class="grid-2">
+          <label class="field">Email
+            <input type="email" data-field="from.email" placeholder="hello@acme.com">
+          </label>
+          <label class="field">Phone
+            <input type="tel" data-field="from.phone" placeholder="(555) 123-4567">
+          </label>
+        </div>
+        <label class="field">Address
+          <textarea rows="2" data-field="from.address" placeholder="123 Main St&#10;Springfield, VA 22150"></textarea>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Bill to (client)</h2>
+        <label class="field">Client name
+          <input type="text" data-field="to.name" placeholder="Client Co.">
+        </label>
+        <label class="field">Email
+          <input type="email" data-field="to.email" placeholder="billing@client.com">
+        </label>
+        <label class="field">Address
+          <textarea rows="2" data-field="to.address"></textarea>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Line items</h2>
+        <div class="items-head" aria-hidden="true">
+          <span>Description</span><span>Qty</span><span>Rate</span><span>Tax %</span><span></span>
+        </div>
+        <div id="itemsList" class="items-list"></div>
+        <button type="button" class="btn btn-ghost btn-block" id="addItemBtn">+ Add line item</button>
+        <div class="grid-2 discount-row">
+          <label class="field">Discount %
+            <input type="number" min="0" max="100" step="0.01" inputmode="decimal" data-field="discount">
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Notes &amp; terms</h2>
+        <label class="field">Shown at the bottom of the document
+          <textarea rows="3" data-field="notes" placeholder="Payment due within 15 days. Thank you for your business!"></textarea>
+        </label>
+      </section>
+
+      <p class="save-status" id="saveStatus" aria-live="polite"></p>
+    </form>
+
+    <!-- ===== Live preview (this is what gets printed) ===== -->
+    <section class="preview-wrap" aria-label="Document preview">
+      <article class="paper" id="paper">
+        <header class="paper-head">
+          <div>
+            <img id="pLogo" class="p-logo" alt="" hidden>
+            <div class="p-from-name" id="pFromName"></div>
+            <div class="p-muted p-pre" id="pFromDetails"></div>
+          </div>
+          <div class="p-doc">
+            <div class="p-doc-title" id="pTitle">QUOTE</div>
+            <dl class="p-meta">
+              <dt>Number</dt><dd id="pNumber"></dd>
+              <dt>Issued</dt><dd id="pIssue"></dd>
+              <dt id="pDueLabel">Valid until</dt><dd id="pDue"></dd>
+            </dl>
+          </div>
+        </header>
+
+        <div class="p-bill">
+          <div class="p-label">Bill to</div>
+          <div class="p-to-name" id="pToName"></div>
+          <div class="p-muted p-pre" id="pToDetails"></div>
+        </div>
+
+        <table class="p-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="num">Qty</th>
+              <th class="num">Rate</th>
+              <th class="num">Tax</th>
+              <th class="num">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="pItems"></tbody>
+        </table>
+
+        <div class="p-totals">
+          <dl>
+            <dt>Subtotal</dt><dd id="pSubtotal"></dd>
+            <dt id="pDiscountLabel">Discount</dt><dd id="pDiscount"></dd>
+            <dt>Tax</dt><dd id="pTax"></dd>
+            <dt class="p-total">Total</dt><dd class="p-total" id="pTotal"></dd>
+          </dl>
+        </div>
+
+        <div class="p-notes p-pre" id="pNotes"></div>
+      </article>
+    </section>
+  </main>
+
+  <template id="itemRowTpl">
+    <div class="item-row">
+      <input type="text" class="i-desc" aria-label="Description" placeholder="Service or product">
+      <input type="number" class="i-qty" aria-label="Quantity" placeholder="Qty" min="0" step="any" inputmode="decimal">
+      <input type="number" class="i-rate" aria-label="Rate" placeholder="Rate" min="0" step="0.01" inputmode="decimal">
+      <input type="number" class="i-tax" aria-label="Tax percent" placeholder="Tax %" min="0" step="0.01" inputmode="decimal">
+      <button type="button" class="i-remove" aria-label="Remove line item" title="Remove">×</button>
+    </div>
+  </template>
+
+  <script src="calc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
