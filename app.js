@@ -177,6 +177,105 @@
     $(".i-desc", rows[rows.length - 1]).focus();
   });
 
+  // ---------- Saved clients ----------
+  // Stored separately from the document so they survive "New document".
+
+  var CLIENTS_KEY = "itemized-quote-builder:clients:v1";
+
+  function loadClients() {
+    try {
+      var list = JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]");
+      return Array.isArray(list) ? list.filter(function (c) { return c && c.name; }) : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  var clients = loadClients();
+
+  function storeClients() {
+    try {
+      localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function sameName(a, b) {
+    return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+  }
+
+  function findClientIndex(name) {
+    for (var i = 0; i < clients.length; i++) {
+      if (sameName(clients[i].name, name)) return i;
+    }
+    return -1;
+  }
+
+  function renderClientOptions() {
+    var select = $("#clientSelect");
+    select.length = 1; // keep the "Saved clients…" placeholder
+    clients
+      .slice()
+      .sort(function (a, b) { return a.name.localeCompare(b.name); })
+      .forEach(function (c) {
+        var opt = document.createElement("option");
+        opt.value = c.name;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+    syncClientSelect();
+  }
+
+  /** Select the saved client matching the current "Bill to" name, if any. */
+  function syncClientSelect() {
+    var idx = state.to.name ? findClientIndex(state.to.name) : -1;
+    $("#clientSelect").value = idx >= 0 ? clients[idx].name : "";
+    $("#deleteClientBtn").hidden = idx < 0;
+  }
+
+  function flash(message) {
+    $("#saveStatus").textContent = message;
+  }
+
+  $("#clientSelect").addEventListener("change", function (e) {
+    var idx = findClientIndex(e.target.value);
+    if (idx < 0) return;
+    var c = clients[idx];
+    state.to = { name: c.name, email: c.email || "", address: c.address || "" };
+    ["name", "email", "address"].forEach(function (k) {
+      $('[data-field="to.' + k + '"]').value = state.to[k];
+    });
+    update();
+  });
+
+  $("#saveClientBtn").addEventListener("click", function () {
+    var name = String(state.to.name || "").trim();
+    if (!name) {
+      flash("Enter a client name before saving.");
+      $('[data-field="to.name"]').focus();
+      return;
+    }
+    var record = { name: name, email: state.to.email || "", address: state.to.address || "" };
+    var idx = findClientIndex(name);
+    if (idx >= 0) clients[idx] = record; else clients.push(record);
+    var ok = storeClients();
+    renderClientOptions();
+    flash(ok ? (idx >= 0 ? "Updated " : "Saved ") + name + " to your clients" : "Couldn't save clients in this browser.");
+  });
+
+  $("#deleteClientBtn").addEventListener("click", function () {
+    var idx = findClientIndex($("#clientSelect").value);
+    if (idx < 0) return;
+    var name = clients[idx].name;
+    if (!confirm("Remove " + name + " from saved clients? This won't change the current document.")) return;
+    clients.splice(idx, 1);
+    storeClients();
+    renderClientOptions();
+    flash("Removed " + name);
+  });
+
   // ---------- Logo ----------
 
   function renderLogoControls() {
@@ -297,6 +396,7 @@
 
   function update() {
     renderPreview();
+    syncClientSelect();
     save();
   }
 
@@ -312,8 +412,16 @@
   });
 
   $("#resetBtn").addEventListener("click", function () {
-    if (!confirm("Start a new document? Your business details and logo are kept; everything else is cleared.")) return;
-    var keep = { from: state.from, logo: state.logo, currency: state.currency, notes: state.notes };
+    var next = Calc.nextNumber(state.number);
+    if (!confirm("Start new document " + (next || "") + "? Your business details, logo and saved clients are kept; everything else is cleared.")) return;
+    var keep = {
+      docType: state.docType,
+      number: next,
+      from: state.from,
+      logo: state.logo,
+      currency: state.currency,
+      notes: state.notes,
+    };
     state = Object.assign(defaultState(), keep, { items: [newItem()] });
     fillForm();
     update();
@@ -321,5 +429,6 @@
 
   // ---------- Start ----------
   fillForm();
+  renderClientOptions();
   renderPreview();
 })();

@@ -16,9 +16,11 @@ It's plain HTML, CSS and JavaScript, with no frameworks, no build step and no se
 - **Itemized line items.** Each has a description, quantity, rate and its own tax %.
 - **Live totals.** Subtotal, an optional % discount (taken off before tax), tax and total.
 - **PDF export.** Uses the browser's built-in "Save as PDF". The file is named for you (e.g. `Invoice - INV-0001 - Client Co.pdf`).
+- **Saved clients.** Save a client once, then pick them from a dropdown on any future quote or invoice.
+- **Auto-numbering.** "New document" moves to the next number for you (`Q-0001` → `Q-0002`, `INV-0099` → `INV-0100`).
 - **Your branding.** Upload a logo and add your business details.
 - **8 currencies.** USD, EUR, GBP, CAD, AUD, MXN, INR and JPY, formatted correctly for each.
-- **Autosave.** Your work is kept in the browser (localStorage). "New document" keeps your business details and logo.
+- **Autosave.** Your work is kept in the browser (localStorage). "New document" keeps your business details, logo and saved clients.
 - **Mobile friendly** and supports dark mode for the editor.
 - **Private by design.** No accounts, no tracking, no data sent anywhere.
 
@@ -38,7 +40,7 @@ open index.html        # macOS  (Windows: start index.html, Linux: xdg-open inde
 ## How to use
 
 1. Choose **Quote** or **Invoice** and set the number and dates.
-2. Fill in **From** (your business) and **Bill to** (your client).
+2. Fill in **From** (your business) and **Bill to** (your client). Click **Save client** to reuse them next time.
 3. Add **line items**. New rows copy the tax rate of the row above.
 4. Optionally add a **discount** and **notes / payment terms**.
 5. Click **Download PDF**, then choose **Save as PDF** in the print dialog.
@@ -60,8 +62,8 @@ This logic lives in [`calc.js`](calc.js) with no DOM code, so it's easy to test 
 ```
 ├── index.html          # Page layout: editor form + document preview
 ├── styles.css          # Styles, responsive layout and print (PDF) rules
-├── app.js              # UI: form binding, line items, preview, autosave
-├── calc.js             # Pure math: line totals, discount, tax, money formatting
+├── app.js              # UI: form binding, line items, saved clients, preview, autosave
+├── calc.js             # Pure logic: line totals, discount, tax, money formatting, numbering
 ├── tests/calc.test.js  # Unit tests (Node's built-in test runner)
 └── docs/screenshot.png
 ```
@@ -87,9 +89,10 @@ Tests also run automatically on every push through GitHub Actions.
 
 Ideas for contributions are welcome:
 
+- [x] Save multiple clients
+- [x] Auto-incrementing document numbers
 - [ ] Export / import a document as JSON
-- [ ] Save multiple clients and documents
-- [ ] Auto-incrementing document numbers
+- [ ] Save a history of past documents
 - [ ] Color theme picker for the PDF
 - [ ] Per-line discounts and shipping fees
 - [ ] "Pay now" link field (Stripe, PayPal, etc.)

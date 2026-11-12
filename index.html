@@ -87,6 +87,13 @@
 
       <section class="card">
         <h2>Bill to (client)</h2>
+        <div class="client-picker">
+          <select id="clientSelect" aria-label="Saved clients">
+            <option value="">Saved clients…</option>
+          </select>
+          <button type="button" class="btn btn-ghost btn-small" id="saveClientBtn">Save client</button>
+          <button type="button" class="btn btn-ghost btn-small btn-danger" id="deleteClientBtn" hidden>Delete</button>
+        </div>
         <label class="field">Client name
           <input type="text" data-field="to.name" placeholder="Client Co.">
         </label>

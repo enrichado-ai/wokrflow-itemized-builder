@@ -54,6 +54,17 @@ test("empty item list totals to zero", () => {
   assert.deepEqual(Calc.documentTotals([], 0), { subtotal: 0, discount: 0, tax: 0, total: 0 });
 });
 
+test("nextNumber increments and keeps prefix and padding", () => {
+  assert.equal(Calc.nextNumber("Q-0001"), "Q-0002");
+  assert.equal(Calc.nextNumber("Q-0009"), "Q-0010");
+  assert.equal(Calc.nextNumber("INV-99"), "INV-100");
+  assert.equal(Calc.nextNumber("INV-9999"), "INV-10000");
+  assert.equal(Calc.nextNumber("2026-007"), "2026-008");
+  assert.equal(Calc.nextNumber("ACME"), "ACME-1");
+  assert.equal(Calc.nextNumber("  "), "");
+  assert.equal(Calc.nextNumber(undefined), "");
+});
+
 test("formatMoney formats with currency", () => {
   assert.equal(Calc.formatMoney(1234.5, "USD", "en-US"), "$1,234.50");
   assert.equal(Calc.formatMoney(1000, "JPY", "en-US"), "¥1,000");

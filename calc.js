@@ -61,7 +61,23 @@
     }
   }
 
+  /**
+   * Next document number, keeping the prefix and zero padding.
+   * "Q-0009" -> "Q-0010", "INV-99" -> "INV-100", "2026-7" -> "2026-8", "ACME" -> "ACME-1".
+   */
+  function nextNumber(current) {
+    var str = String(current == null ? "" : current).trim();
+    if (!str) return "";
+    var match = str.match(/^(.*?)(\d+)$/);
+    if (!match) return str + "-1";
+    var digits = match[2];
+    var next = String(Number(digits) + 1);
+    if (next.length < digits.length) next = next.padStart(digits.length, "0");
+    return match[1] + next;
+  }
+
   var api = {
+    nextNumber: nextNumber,
     round2: round2,
     toNumber: toNumber,
     lineTotals: lineTotals,

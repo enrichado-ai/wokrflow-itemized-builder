@@ -165,6 +165,12 @@ textarea { resize: vertical; }
 .i-remove:hover { color: var(--danger); background: var(--bg); }
 .discount-row { margin-top: 12px; }
 
+/* Saved clients */
+.client-picker { display: flex; gap: 8px; margin-bottom: 12px; }
+.client-picker select { flex: 1; min-width: 0; }
+.btn-danger { color: var(--danger); }
+.btn-danger:hover { border-color: var(--danger); }
+
 .save-status { margin: 0; font-size: 12px; color: var(--muted); text-align: center; min-height: 1em; }
 
 /* ---------- Paper (preview + print) ---------- */
